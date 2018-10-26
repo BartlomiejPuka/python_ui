@@ -2,7 +2,7 @@ import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel
 
-class MsgBox(QtWidgets.QWidget):
+class MsgBox(QtWidgets.QDialog):
     def __init__(self, prompt="prompt", title="title"):
         """
         param::prompt describes what u want
@@ -12,9 +12,12 @@ class MsgBox(QtWidgets.QWidget):
         self.title = title
         self.left = 50
         self.top = 50
-        self.width = 280
+        self.width = 250
         self.height = 120
         self.prompt = prompt
+        self.password = ""
+        self.state = False
+        self.fontHiddenMode = True
 
         
         self.__initUI()
@@ -24,16 +27,23 @@ class MsgBox(QtWidgets.QWidget):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        self.label = QLabel("promptaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", self)
+        self.label = QLabel("prompt", self)
         
         self.label.adjustSize()
 
         self.inputLine = QLineEdit(self)
-        self.inputLine.setFixedHeight(25)
+        self.inputLine.setFixedSize(220,25)
+        self.inputLine.setEchoMode(QLineEdit.Password)
+        self.inputLine.setText = ""
 
         self.okButton = QPushButton("Ok",self)
+        self.okButton.clicked.connect(self.__okClick)
+
         self.cancelButton = QPushButton("Cancel",self)
+        self.cancelButton.clicked.connect(self.__cancelClick)
+
         self.showButton = QPushButton("Show",self)
+        self.showButton.clicked.connect(self.__showClick)
 
         self.labelBox = QHBoxLayout()
         self.labelBox.setAlignment(QtCore.Qt.AlignCenter)
@@ -57,7 +67,7 @@ class MsgBox(QtWidgets.QWidget):
         self.vbox.addLayout(self.labelBox)
         self.vbox.addStretch(1)
         self.vbox.addLayout(self.inputLineBox)
-        self.vbox.addStretch(1)
+        self.vbox.addStretch(2)
         self.vbox.addLayout(self.buttonsBox)
         
         self.setLayout(self.vbox)
@@ -65,28 +75,45 @@ class MsgBox(QtWidgets.QWidget):
 
         self.setFixedSize(self.size())
         self.__center()
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
         self.show()
+
+    def __okClick(self):
+        if self.inputLine.text() != "":
+            self.password = self.inputLine.text()
+            self.state = True
+            self.accept()
+
+    def __cancelClick(self):
+            self.state = False
+            self.reject()
+
+    def __showClick(self):
+        if not self.fontHiddenMode:
+            if self.inputLine.text() != "":
+                self.inputLine.setEchoMode(QLineEdit.Password)
+                self.fontHiddenMode = not self.fontHiddenMode
+        else:
+            if self.inputLine.text() != "":
+                self.inputLine.setEchoMode(QLineEdit.Normal)
+                self.fontHiddenMode = not self.fontHiddenMode
 
     @staticmethod
     def get_password(prompt="Info", title="Window"):
         app = QtWidgets.QApplication(sys.argv)
         msgbox = MsgBox(prompt,title)
         app.exec_()
-
+        return (msgbox.password, msgbox.state)
+        
     def __center(self):
-        # geometry of the main window
         qr = self.frameGeometry()
-        # center point of screen
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
-        # move rectangle's center point to screen's center point
         qr.moveCenter(cp)
-        # top left of rectangle becomes top left of window centering it
         self.move(qr.topLeft())
     
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    msgbox = MsgBox()
-    app.exec_()
+    
+    password, state = MsgBox.get_password()
+    print(password, state)
 
 
