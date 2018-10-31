@@ -1,9 +1,9 @@
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel
-
+from PyQt5.QtGui import QMouseEvent, QCursor, QFont
 class MsgBox(QtWidgets.QDialog):
-    def __init__(self, prompt="prompt", title="title"):
+    def __init__(self, prompt="Provide Password:", title="title"):
         """
         param::prompt describes what u want
         param:: title
@@ -18,23 +18,27 @@ class MsgBox(QtWidgets.QDialog):
         self.password = ""
         self.state = False
         self.fontHiddenMode = True
-
-        
         self.__initUI()
 
 
     def __initUI(self):
+
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        self.label = QLabel("prompt", self)
-        
+
+        self.font = QFont('Droid Sans', 14, QFont.Bold)
+        self.label = QLabel(self.prompt, self)
+        self.label.setFont(self.font)
+
         self.label.adjustSize()
 
         self.inputLine = QLineEdit(self)
         self.inputLine.setFixedSize(220,25)
         self.inputLine.setEchoMode(QLineEdit.Password)
         self.inputLine.setText = ""
+        self.inputLine.selectAll()
+        self.inputLine.setFocus()
 
         self.okButton = QPushButton("Ok",self)
         self.okButton.clicked.connect(self.__okClick)
@@ -89,17 +93,21 @@ class MsgBox(QtWidgets.QDialog):
             self.reject()
 
     def __showClick(self):
-        if not self.fontHiddenMode:
-            if self.inputLine.text() != "":
-                self.inputLine.setEchoMode(QLineEdit.Password)
-                self.fontHiddenMode = not self.fontHiddenMode
-        else:
-            if self.inputLine.text() != "":
-                self.inputLine.setEchoMode(QLineEdit.Normal)
-                self.fontHiddenMode = not self.fontHiddenMode
+        
+        if self.inputLine.text() != "":
+            self.showButton.setEnabled(False)
+            if not self.fontHiddenMode:
+                    self.inputLine.setEchoMode(QLineEdit.Password)
+                    self.fontHiddenMode = not self.fontHiddenMode
+            else:
+                    self.inputLine.setEchoMode(QLineEdit.Normal)
+                    self.fontHiddenMode = not self.fontHiddenMode
+
+    def mousePressEvent(self, QMouseEvent):
+        self.inputLine.setEchoMode(QLineEdit.Password)
 
     @staticmethod
-    def get_password(prompt="Info", title="Window"):
+    def show_dialog(prompt="Provide Password:", title="Window"):
         app = QtWidgets.QApplication(sys.argv)
         msgbox = MsgBox(prompt,title)
         app.exec_()
@@ -113,7 +121,6 @@ class MsgBox(QtWidgets.QDialog):
     
 if __name__ == '__main__':
     
-    password, state = MsgBox.get_password()
+    password, state = MsgBox.show_dialog()
     print(password, state)
-
 
